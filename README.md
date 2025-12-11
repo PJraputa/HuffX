@@ -88,26 +88,3 @@ crypt_param   = 7 bytes（目前 XOR 只用 [0]）
 
 ---
 
-## 安裝（選擇性）
-
-使用 Makefile：
-
-```
-make
-sudo make install
-# 或
-make install PREFIX=$HOME/.local
-```
-
-安裝完成後：
-
-```
-huffx -h
-```
-
----
-
-## 授權
-
-請依您的需求填寫（MIT / BSD / GPL / ...）。
-
