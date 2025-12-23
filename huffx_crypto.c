@@ -27,7 +27,7 @@ static uint8_t arx_next_byte(uint32_t *v0, uint32_t *v1) {
     return (*v1 & 0xFF);
 }
 
-int huffx_crypto_apply(HuffxCryptAlgo algo,
+int huffx_crypto_apply1(HuffxCryptAlgo algo,
                        const uint8_t crypt_param[7],
                        uint8_t *buf,
                        size_t size)
