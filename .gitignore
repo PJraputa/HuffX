@@ -1,0 +1,13 @@
+*.xml
+*.txt
+*.png
+*.jpeg
+*.mp4
+*.html
+*.o
+/bin
+.idea/
+.vscode/
+obj/
+build/
+huffx
