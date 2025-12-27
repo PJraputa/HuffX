@@ -16,6 +16,7 @@ HuffX 是一個以 Huffman 編碼為核心的壓縮格式，支援：
 ```
 huffx.h              公開 API（給外部程式 / CLI 使用）
 huffx_internal.h     Library 內部共用定義（Huffman 節點、Bit I/O、Header 等）
+huffx_file.h         定義文件和I/O部分的資料結構如linked list
 
 huffx_core.c         Huffman + bit I/O + buffer-level compress/decompress
 huffx_crypto.c       加解密模組（目前只實作 XOR）
@@ -30,15 +31,10 @@ huffx_cli.c          命令列工具 (main)，呼叫 huffx_compress_file / _deco
 
 ### 1. 使用 gcc 編譯 CLI
 
-```
-gcc -std=c11 -Wall -Wextra     huffx_core.c huffx_crypto.c huffx_file.c huffx_cli.c     -o huffx
-```
-
-### 2. 編譯成靜態 Library（選擇性）
+需要Linux環境才可以使用Makefile
 
 ```
-gcc -std=c11 -Wall -Wextra -c huffx_core.c huffx_crypto.c huffx_file.c
-ar rcs libhuffx.a huffx_core.o huffx_crypto.o huffx_file.o
+make
 ```
 
 ---
@@ -48,13 +44,19 @@ ar rcs libhuffx.a huffx_core.o huffx_crypto.o huffx_file.o
 ### 壓縮（不加密）
 
 ```
-./huffx -c input.bin output.hxf
+./huffx -c input.bin output
 ```
 
 ### 壓縮 + XOR 加密
 
 ```
-./huffx -c -k 42 input.bin output.hxf
+./huffx -c -m xor -k 42 input.bin output
+```
+
+### 壓縮 + ARX 加密
+
+```
+./huffx -c input.bin output -m arx -m 243
 ```
 
 ### 解壓
@@ -73,11 +75,11 @@ ar rcs libhuffx.a huffx_core.o huffx_crypto.o huffx_file.o
 magic[4]      = "HXF1"
 version       = 1
 compression   = 1 (Huffman)
-crypt_algo    = 0 or 1 (XOR)
+crypt_algo    = 0 or 1 (XOR) or 2 (ARX)
 original_size = uint32
 payload_size  = uint32
 padding_bits  = 0-7
-crypt_param   = 7 bytes（目前 XOR 只用 [0]）
+crypt_param   = 7 bytes
 ```
 
 ### Payload
