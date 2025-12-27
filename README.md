@@ -77,7 +77,7 @@ make
 magic[4]      = "HXF1"
 version       = 1
 compression   = 1 (Huffman)
-crypt_algo    = 0 or 1 (XOR)
+crypt_algo    = 0 or 1 (XOR) or (ARX)
 original_size = uint32
 payload_size  = uint32
 padding_bits  = 0-7
