@@ -120,6 +120,28 @@ static void build_code_table_rec(HuffNode *node, HuffCode codes[], uint8_t *path
     path[depth] = 1; build_code_table_rec(node->right, codes, path, depth + 1);
 }
 
+static int get_code_slowly(HuffNode *node, int symbol, uint8_t *path, int depth, int *out_len) {
+    if (!node) return 0;
+
+    /* 到了葉節點：檢查是不是我們要找的符號 */
+    if (!node->left && !node->right) {
+        if (node->symbol == symbol) {
+            *out_len = depth;
+            return 1; /* 找到了！ */
+        }
+        return 0; /* 找錯人了 */
+    }
+
+    /* 往左走 (紀錄 0) */
+    path[depth] = 0;
+    if (get_code_slowly(node->left, symbol, path, depth + 1, out_len)) return 1;
+
+    /* 往右走 (紀錄 1) */
+    path[depth] = 1;
+    if (get_code_slowly(node->right, symbol, path, depth + 1, out_len)) return 1;
+
+    return 0; /* 這條路沒找到 */
+}
 /* ===================== Bit I/O ===================== */
 
 void huffx_bw_init(BitWriter *bw, uint8_t *buf, size_t capacity) {
@@ -205,11 +227,6 @@ int huffx_compress_buffer(const uint8_t *input_data, size_t input_size,
     HuffNode *root = huffx_build_tree(freq);
     if (!root) return -1;
 
-    HuffCode codes[HUFFX_ALPHABET_SIZE];
-    uint8_t path[HUFFX_MAX_CODE_LEN];
-    for (int i=0; i<256; ++i) codes[i].length = 0;
-    build_code_table_rec(root, codes, path, 0);
-
     /* 3. 產生 Payload */
     size_t max_bytes = input_size * 2 + 4096; /* 安全緩衝 */
     uint8_t *payload = (uint8_t *)huffx_xmalloc(max_bytes);
@@ -217,9 +234,18 @@ int huffx_compress_buffer(const uint8_t *input_data, size_t input_size,
     huffx_bw_init(&bw, payload, max_bytes);
 
     huffx_serialize_tree(root, &bw);
+
+    uint8_t temp_path[HUFFX_MAX_CODE_LEN];
+    int temp_len = 0;
+
     for (size_t i = 0; i < input_size; ++i) {
-        HuffCode *c = &codes[input_data[i]];
-        huffx_bw_write_bits(&bw, c->bits, c->length);
+        if (get_code_slowly(root, input_data[i], temp_path, 0, &temp_len)) {
+            huffx_bw_write_bits(&bw, temp_path, temp_len);
+        } else {
+            /* 理論上不可能發生，除非樹建錯了 */
+            fprintf(stderr, "Error: Symbol not found in tree!\n");
+            free(payload); huffx_free_tree(root); return -1;
+        }
     }
     uint8_t padding = huffx_bw_flush(&bw);
     size_t payload_size = bw.size;

@@ -4,6 +4,7 @@
 *.jpeg
 *.mp4
 *.html
+*.bin
 *.o
 *.hxf
 /bin
