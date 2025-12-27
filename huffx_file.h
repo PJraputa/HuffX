@@ -2,6 +2,7 @@
 #define HUFFX_FILE_H
 
 #include <stddef.h>
+#include <time.h>
 #include "huffx.h"
 
 #define PATH_MAX 4096
@@ -13,6 +14,12 @@ typedef struct PathNode {
     struct PathNode *next;
 } PathNode;
 
+typedef struct {
+    long long total_in_bytes;
+    long long total_out_bytes;
+    int file_count;
+} HuffxStats;
+
 /* Queue structure for linked list-based traversal */
 typedef struct {
     PathNode *front;
@@ -23,8 +30,8 @@ void queue_init(PathQueue *q);
 void queue_push(PathQueue *q, const char *path);
 char *queue_pop(PathQueue *q);
 void queue_free(PathQueue *q);
-int process_single_file(const char *in_path, const char *out_path, const HuffxOptions *opt, int decompress_mode) ;
-void process_folder(const char *in_dir, const char *out_dir, const HuffxOptions *opt, int decompress_mode) ;
+int process_single_file(const char *in_path, const char *out_path, const HuffxOptions *opt, int decompress_mode, HuffxStats *stats);
+void process_folder(const char *in_dir, const char *out_dir, const HuffxOptions *opt, int decompress_mode, HuffxStats *stats);
 int is_directory(const char *path);
 void ensure_dir_exists(const char *dir_path) ;
 #endif // HUFFX_FILE_H

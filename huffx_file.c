@@ -11,6 +11,12 @@
 #include "huffx_file.h"
 #define PATH_MAX 4096
 
+static long long get_file_size(const char *path) {
+    struct stat st;
+    if (stat(path, &st) == 0) return (long long)st.st_size;
+    return 0;
+}
+
 static int read_whole_file(const char *path, uint8_t **buf, size_t *sz) {
     FILE *f = fopen(path, "rb");
     if (!f) return -1;
@@ -120,7 +126,7 @@ void queue_free(PathQueue *q) {
     }
 }
 /* Process a single file */
-int process_single_file(const char *in_path, const char *out_path, const HuffxOptions *opt, int decompress_mode) {
+int process_single_file(const char *in_path, const char *out_path, const HuffxOptions *opt, int decompress_mode, HuffxStats *stats) {
     char final_out[PATH_MAX];
     if (decompress_mode) {
         size_t len = strlen(out_path);
@@ -145,13 +151,20 @@ int process_single_file(const char *in_path, const char *out_path, const HuffxOp
         fprintf(stderr, "Failed on: %s\n", in_path);
         return -1;
     }
+
+    if (stats) {
+        stats->file_count++;
+        stats->total_in_bytes += get_file_size(in_path);
+        stats->total_out_bytes += get_file_size(final_out);
+    }
+
     return 0;
 }
 
 
 
 /* Process folder using linked list queue for BFS (non-recursive) */
-void process_folder(const char *in_dir, const char *out_dir, const HuffxOptions *opt, int decompress_mode) {
+void process_folder(const char *in_dir, const char *out_dir, const HuffxOptions *opt, int decompress_mode, HuffxStats *stats) {
     ensure_dir_exists(out_dir);
 
     PathQueue q;
@@ -192,7 +205,7 @@ void process_folder(const char *in_dir, const char *out_dir, const HuffxOptions 
                     if (len < 4 || strcmp(entry->d_name + len - 4, ".hxf") != 0)
                         continue;
                 }
-                process_single_file(full_in, full_out, opt, decompress_mode);
+                process_single_file(full_in, full_out, opt, decompress_mode, stats);
             }
         }
         closedir(dir);

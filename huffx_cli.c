@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -72,6 +73,15 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    /* 初始化統計數據 */
+    HuffxStats stats = {0};
+    stats.total_in_bytes = 0;
+    stats.total_out_bytes = 0;
+    stats.file_count = 0;
+
+    printf("--- Operation Start ---\n");
+    clock_t start_time = clock(); /* 按下碼表 */
+
     int is_dir = is_directory(in_path);
     if (is_dir != is_directory(out_path)) {
         fprintf(stderr, "Input and output must both be files or both folders\n");
@@ -82,6 +92,30 @@ int main(int argc, char **argv) {
         process_folder(in_path, out_path, &opt, mode_d);
     } else {
         process_single_file(in_path, out_path, &opt, mode_d);
+    }
+
+    clock_t end_time = clock(); /* 停止碼表 */
+    printf("--- Operation Finished ---\n");
+
+    /* 計算與顯示報告 */
+    double time_spent = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+    double ratio = 0.0;
+    if (stats.total_in_bytes > 0) {
+        ratio = (double)stats.total_out_bytes / (double)stats.total_in_bytes * 100.0;
+    }
+
+    printf("\n[Summary]\n");
+    printf("Time Taken    : %.4f seconds\n", time_spent);
+    printf("Files Processed: %d\n", stats.file_count);
+    printf("Total Input   : %lld bytes\n", stats.total_in_bytes);
+    printf("Total Output  : %lld bytes\n", stats.total_out_bytes);
+    
+    if (mode_c) {
+        printf("Compression Ratio: %.2f%% (Size: %.2f%% of original)\n", 
+               100.0 - ratio, ratio);
+    } else {
+        // 解壓縮通常看膨脹率，或者是還原了多少
+        printf("Decompression: Expanded to %.2f%% of input size\n", ratio);
     }
 
     printf("All done.\n");
