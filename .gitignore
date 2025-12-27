@@ -5,6 +5,7 @@
 *.mp4
 *.html
 *.o
+*.hxf
 /bin
 .idea/
 .vscode/

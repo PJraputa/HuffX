@@ -89,9 +89,9 @@ int main(int argc, char **argv) {
     }
 
     if (is_dir) {
-        process_folder(in_path, out_path, &opt, mode_d);
+        process_folder(in_path, out_path, &opt, mode_d, &stats);
     } else {
-        process_single_file(in_path, out_path, &opt, mode_d);
+        process_single_file(in_path, out_path, &opt, mode_d, &stats);
     }
 
     clock_t end_time = clock(); /* 停止碼表 */

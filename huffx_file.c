@@ -24,7 +24,15 @@ static int read_whole_file(const char *path, uint8_t **buf, size_t *sz) {
     long len = ftell(f);
     fseek(f, 0, SEEK_SET);
     *buf = malloc(len);
-    fread(*buf, 1, len, f);
+    if (!*buf) { 
+        fclose(f);
+        return -1;
+    }
+    if (fread(*buf, 1, len, f) != (size_t)len) {
+        free(*buf); // 讀取失敗，釋放記憶體
+        fclose(f);  // 關閉檔案
+        return -1;  // 回傳錯誤
+    }
     fclose(f);
     *sz = len;
     return 0;
